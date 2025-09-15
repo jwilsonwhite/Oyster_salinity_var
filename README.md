@@ -22,4 +22,11 @@ kernmatSimp.m creates IPM kernels, given options
 makeSimpVec.m creates a vector that will perform Simpson's integration 
 predator_salinity_penalty.m calculates the appropriate predator attack rate, given a salinity and temperature
 
+# Ancillary analyses
+Apalach_data_comparison.m performs the comparison between historical data and model size distributions shown in Fig. S7
+salinity_resid_analysis.m performs analyses on the time scales of variability in the historical salinity timeseries, including the FFT analysis
+Oyster_global_sens.m performs the global sensitivity analysis
+Oyster_Params_Sens.m creates the randomly generated parameter sets used in the sensitivity analysis
+global_sens_randomforest.R performs the random forest analysis of for the global sensitivity results
+
 
