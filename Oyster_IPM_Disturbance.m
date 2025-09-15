@@ -2,7 +2,7 @@
 %is an input now 
 
 %function Oyster_IPM_Disturbance(Meta,T,TS_temp,Rn,F,Fp,Y,Runs,savename)
-function Oyster_IPM_Disturbance(Meta,T,TS_temp,TS_sal,Rn,F,Fp,savename,saveopt,salopt)
+function [N] = Oyster_IPM_Disturbance(Meta,T,TS_temp,TS_sal,Rn,F,Fp,savename,saveopt,salopt)
 
 %for i = 1:Runs % trial run: 10 simulations; full run: 10000 sims
 
@@ -69,7 +69,8 @@ for t = 2:T % each timestep is 6 months.
     RR = RR.*Meta.Params.Prey.Rvec*Meta.IPM.Prey.dy;
         case 'Closed' % USE 'Closed' Recruitment -> Meta.Rect = 'Closed'
    kmatNr = kernmatSimp(Meta.IPM.Prey.x,TS_sal(1,t),Meta.Params.Prey,0,'fecundity'); % get kernel        
-   RR = kmatNr*N(:,t-1)*Meta.IPM.Prey.dy;         
+   RR = kmatNr*N(:,t-1)*Meta.IPM.Prey.dy;
+   %RRtmp(t) = sum(RR);
         case 'Mixed'
     kmatNr = kernmatSimp(Meta.IPM.Prey.x,TS_sal(1,t),Meta.Params.Prey,0,'fecundity'); % get kernel        
    RR = kmatNr*N(:,t-1)*Meta.IPM.Prey.dy + Rn(t)*Meta.IPM.Prey.dy; %sum(kmatNr*N(:,t-1)*Meta.IPM.Prey.dy + Rn(t));         
@@ -89,15 +90,20 @@ for t = 2:T % each timestep is 6 months.
         case 'NoLarval'
             M_r = 0.76; % approximate maximum of the penalty function 
 
-            disp(M_r)
+          %  disp(M_r)
         otherwise
 % New approach: combination of early & later survival
 % 1st week
  M_r1 = Meta.Params.Prey.b0 + Meta.Params.Prey.b1.*Tavg(1) + Meta.Params.Prey.b2.*Savg(1) + Meta.Params.Prey.b3.*Tavg(1).^2 + Meta.Params.Prey.b4.*Savg(1).^2 + Meta.Params.Prey.b5.*(Tavg(1).*Savg(1));
  M_r1 = max(0,M_r1);
  %M_r2 = -104.389 + 10.221.*Tavg(2:end) + -0.2006.*Tavg(2:end).^2 + 0.0996 .* Tavg(2:end) .* Savg(2:end) + -0.1455 .* Savg(2:end).^2 + 2.6621 .* Savg(2:end);
- M_r2 = Meta.Params.Prey.b0a + Meta.Params.Prey.b1a.*Tavg(2:end) + Meta.Params.Prey.b2a.*Tavg(2:end).^2 + Meta.Params.Prey.b3a.*Tavg(2:end).*Savg(2:end) + Meta.Params.Prey.b4a.*Savg(2:end).^2 + Meta.Params.Prey.b4a.*Savg(2:end)
+ M_r2 = Meta.Params.Prey.b0a + Meta.Params.Prey.b1a.*Tavg(2:end) + Meta.Params.Prey.b2a.*Tavg(2:end).^2 + ...
+     Meta.Params.Prey.b3a.*Tavg(2:end).*Savg(2:end) + Meta.Params.Prey.b4a.*Savg(2:end).^2 + Meta.Params.Prey.b5a.*Savg(2:end);
  M_r2 = max(0,M_r2);
+
+
+ %%%% ISSSUES RIGHT HERE WITH M_r2
+
    % M_r = prod(M_r).^(1/4); % geometric mean...this caused issues with
    % zeros so use arithmetic instead
     M_r2 = mean(M_r2);
@@ -109,9 +115,10 @@ for t = 2:T % each timestep is 6 months.
 
 
     RR = RR * M_r * exp(-Meta.Params.Prey.M_r); 
-    RR_surv = 0.7./(1 + sum(RR).*4.*6e-4);
+    RR_surv = Meta.Params.Prey.DDa./(1 + sum(RR).*Meta.Params.Prey.DD);
     RR = RR * RR_surv;
   
+  %  RR_survs(t) = RR_surv;
 
     N(:,t) = N(:,t-1) + RR(:);
 

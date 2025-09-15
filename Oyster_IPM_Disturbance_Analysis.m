@@ -4,8 +4,8 @@ function Oyster_IPM_Disturbance_Analysis
 
 
 doFig1 = false; % salinity timeseries statistics
-doFig2 = false; % example salinity effects on predator
-doFig3 = false; % example time series
+doFig2 = false;% example salinity effects on predator
+doFig3 =  false; % example time series
 doFig4 = true; % histograms of abundance, attack rate, etc. & Table of extinction probs
 
 
@@ -19,7 +19,7 @@ clf
 
 Ys = [0 0.1 0.5]; % levels of increased variability in salinity (based on Pendergrass)
 Fs = [0 0.13 0.26]; % levels of fishing on the predator
-Nsims = 1e2;
+Nsims = 2e3;
 
 for y = 1:length(Ys)
 % 1) load data: e.g., load('y0_2000sims_FullRun1.mat')
@@ -40,7 +40,7 @@ for f = 1:length(Fs)
 for i = 1:Nsims
     
 % [change the file names to match what you are using]
-fname = strcat('Results_Sensitivity_16Oct2024/Results_16Oct2024_F',num2str(Fs(f)),'_stdev_multiplied_',num2str(Ys(y)),'_salopt_NoLarval_run_num_',num2str(i),'.mat');
+fname = strcat('Results_31July2025/Results_31July2025_F',num2str(Fs(f)),'_stdev_multiplied_',num2str(Ys(y)),'_salopt_none_run_num_',num2str(i),'.mat');
 load(fname,'Meta','N','P','AttackRate','RR_s')
 
 
@@ -103,7 +103,7 @@ SPs = reshape(1:(4*length(Ys)),4,length(Ys))';
 subplot(length(Ys),4,SPs(y,1))
 hold on
 histogram(N_AdultAbundance_mean_Last10T(f,:),0:10:400,'normalization','pdf','edgecolor','none')
-xlim([0 440])
+%xlim([0 440])
 xlabel('Adult abundance (oysters 0.25 m–2)')
 set(gca,'xcolor','k','ycolor','k','tickdir','out','ticklength',[0.02 0.02])
 set(gca,'xtick',0:100:500)
@@ -111,7 +111,7 @@ set(gca,'xtick',0:100:500)
 subplot(length(Ys),4,SPs(y,2))
 hold on
 histogram(N_AdultAbundance_stdev_Last10T(f,:)./N_AdultAbundance_mean_Last10T(f,:),0:0.01:0.5,'normalization','pdf','edgecolor','none')
-xlim([0 0.45])
+%xlim([0 0.45])
 xlabel('SD adult abundance (oysters 0.25 m–2)')
 set(gca,'xcolor','k','ycolor','k','tickdir','out','ticklength',[0.02 0.02])
 set(gca,'xtick',0:0.1:0.5)
@@ -119,7 +119,7 @@ set(gca,'xtick',0:0.1:0.5)
 subplot(length(Ys),4,SPs(y,3))
 hold on
 histogram(AR(y,f,:),0:0.005:0.2,'normalization','pdf','edgecolor','none')
-xlim([0 0.15])
+%xlim([0 0.15])
 xlabel('Predator attack rate (oyster-1 y-1)')
 set(gca,'xcolor','k','ycolor','k','tickdir','out','ticklength',[0.02 0.02])
 
@@ -127,7 +127,7 @@ set(gca,'xcolor','k','ycolor','k','tickdir','out','ticklength',[0.02 0.02])
 subplot(length(Ys),4,SPs(y,4))
 hold on
 histogram(RR_total(y,f,:),0:10:550,'normalization','pdf','edgecolor','none') 
-xlim([100 550])
+%xlim([100 550])
 xlabel('Recruitment (spat 0.25 m-2 y-1')
 set(gca,'xcolor','k','ycolor','k','tickdir','out','ticklength',[0.02 0.02])
 set(gca,'xtick',100:100:500)
@@ -213,6 +213,7 @@ for j = 1:Num
 Sal_filename0 = strcat('Salinity_ts/Salinity_stdev_multiplied',num2str(Ys(y)),'_run_num_',num2str(j),'.mat');
 load(Sal_filename0,'TS_sal'); TS_sal = TS_sal(:);
 TS_tmp = TS_sal(40:(40+104)); % 2 years, starting in January
+TS_tmp(TS_tmp>=36)=36;
 plot(TS_tmp,'k-','Color',Cols(y,:),'LineWidth',1.5);
 end % end Num
 end % end Ys
@@ -222,8 +223,10 @@ set(gca,'YGrid','on','xlim',[1,104],'xtick',Ticks(1:end-1),'XTickLabel',Months)
 set(gca,'tickdir','out','ticklength',[0.015 0.015],'ylim',[0 45],'fontsize',4,'ytick',0:10:40)
 
 
+
+
 % Bottom panels: Histograms of distributions
-CalcSalStats = false; % only need to do this once
+CalcSalStats = true; % only need to do this once
 Ys = [0 0.05 0.1 0.5];
 Nsims = 2e3;
 if CalcSalStats
@@ -234,8 +237,10 @@ for i = 1:Nsims
     Summer = 1:2:40;
     Sals = TS_sal(:,Summer);
     Sals = Sals(:);
+    Sals(Sals>=36)=36;
 
     sals_max(y,i) = quantile(Sals,0.95);
+  %  sals_max(y,i) = max(Sals);
     sals_min(y,i) = quantile(Sals,0.05);
     sals_mean(y,i) = mean(Sals,'omitnan');
     sals_std(y,i) = std(Sals,'omitnan');
@@ -275,6 +280,7 @@ set(gca,'xtick',3:2:12)
 
 end
 
+keyboard
 
 end % end if doFig1
 
@@ -298,11 +304,13 @@ clf
 set(gcf,'units','centimeters','Position',[15,10, 8.5, 7 ])
 
 for p = 1:length(Panels)
-fname = strcat('Results_7Oct2024/Results_7Oct2024_F0_stdev_multiplied_',num2str(Ys(p)),'_run_num_',num2str(Runs(p)),'.mat');
+fname = strcat('Results_31July2025/Results_31July2025_F0_stdev_multiplied_',num2str(Ys(p)),'_salopt_none_run_num_',num2str(Runs(p)),'.mat');
 load(fname,'Meta','N','P','AttackRate','RR_s')
 sname = strcat('Salinity_ts/Salinity_stdev_multiplied',num2str(Ys(p)),'_run_num_',num2str(Runs(p)),'.mat');
 load(sname,'TS_sal')
 load('Temp_ts.mat','TS_temp');
+
+TS_sal(TS_sal>36)=36;
 
 % emulate the runningmean variable
 RunningMeanVec1 = TS_sal(:);

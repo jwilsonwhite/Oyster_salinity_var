@@ -5,6 +5,8 @@ if ~exist('salopt','var')
     salopt = 'none';
 end
 
+saveopt = 'none';
+
 %tic;Salinity
 Oyster_Params; % run, if needed, to get up-to-date structure of params & metadata
 load('oyster_PP_params.mat') % load params & metadata ('Meta')
@@ -28,9 +30,17 @@ F = ones(T,1)*(0/52); % level of fishing mortality (harvest) for oysters. 0 for 
 Fp = ones(T,1)*(F_pred/52); % level of fishing mortality (culling/harvest) for drills. 0 for Ch. 2 runs
 
 
-runs = 1e2;
-Y= [0 0.1 0.5]; 
+%runs = 2e3;
+runs = 10;%
+Y= 0; %[0 0.1 0.5]; 
 name = 'Salinity_stdev_multiplied';
+
+dosizeplot = true;
+if dosizeplot
+    figure (1)
+    clf
+    Cm = parula(runs);
+end
 
 %range of multipliers for standard deviation (0 means the standard deviation stays the same, 0.5 means 50% increase)
 % Based on Pendergrass et al, showing a 0-5% increase in variability per
@@ -42,9 +52,24 @@ for i = 1:length(Y)
     load_name = strcat('Salinity_ts/', name, num2str(Y(i)), '_run_num_', num2str(j));
     load(load_name)
 
-    savename = strcat('Results_Sensitivity_16Oct2024/Results_16Oct2024_F',num2str(F_pred),'_stdev_multiplied_',num2str(Y(i)),'_salopt_',salopt,'_run_num_',num2str(j), ...
+ %   TS_sal(TS_sal>36) = 36; % ceiling on salinity levels
+
+    savename = strcat('Results_31July2025/Results_31July2025_F',num2str(F_pred),'_stdev_multiplied_',num2str(Y(i)),'_salopt_',salopt,'_run_num_',num2str(j), ...
         '.mat');
-    Oyster_IPM_Disturbance(Meta,T,TS_temp,TS_sal,Rn,F,Fp,savename,salopt);
+    N = Oyster_IPM_Disturbance(Meta,T,TS_temp,TS_sal,Rn,F,Fp,savename,saveopt,salopt);
+
+if dosizeplot
+    figure(1)
+    hold on
+
+    Ntmp = N(:,35:end);
+    Ntmp = Ntmp./repmat(sum(Ntmp),[250,1]); % rescale to relative abundance
+
+    plot(Meta.IPM.Prey.x,Ntmp*5,'color',Cm(j,:)) % rescale to match integration scale of the Apalachicola data
+    xlim([0 150])
+    ylim([0 0.3])
+    %keyboard
+end % end doplot
 
     end
 
